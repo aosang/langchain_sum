@@ -41,7 +41,7 @@ const mapSummaries = (state) => {
 }
 
 const mapPrompt = ChatPromptTemplate.fromMessages([
-  ['user', '根据如下内容写一个简单的总结: \n\n{context}'],
+  ['user', '请对以下内容进行总结，只输出总结内容，不要包含任何说明、分析或建议：\n\n{context}'],
 ])
 
 // 根据文档，生成总结
@@ -87,7 +87,12 @@ const reducePrompt = ChatPromptTemplate.fromMessages([
     'user',
     `下面是一组总结:
     {docs}
-    将这些内容提炼成一个最终的、综合性的总结。`,
+    
+    请将这些总结合并成一个完整的总结。要求：
+    1. 只输出最终总结内容
+    2. 不要包含任何元信息、说明或分析
+    3. 不要提及"改写"、"优化"等过程信息
+    4. 直接给出总结结果`,
   ],
 ])
 
@@ -125,10 +130,6 @@ import { StateGraph, Annotation } from '@langchain/langgraph'
 
 const OverallState = Annotation.Root({
   contents: Annotation,
-  // Notice here we pass a reducer function.
-  // This is because we want combine all the summaries we generate
-  // from individual nodes back into one list. - this is essentially
-  // the "reduce" part
   summaries: Annotation({
     reducer: (state, update) => state.concat(update),
   }),
@@ -251,7 +252,6 @@ if (finalSummary) {
   
   // 打字效果显示
   // console.log('📄 最终总结:')
-  console.log('─'.repeat(50))
   
   const words = summaryText.split('')
   for (let i = 0; i < words.length; i++) {
